@@ -1,3 +1,4 @@
+var defaultLoc = 'NSW_PT131';
 var useLoc = true;
 var cachedLoc = null;
 
@@ -12,8 +13,10 @@ var xhrRequest = function (url, type, callback) {
 
 function weatherService(pos) {
   var url = 'http://fj3k.com/pebble/';
-  if (pos && !(pos.coords.latitude == 0 && pos.coords.longitude == 0)) {
+  if (pos && !(pos.coords.latitude === 0 && pos.coords.longitude === 0)) {
     url += '?lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude;
+  } else if (defaultLoc.length > 0) {
+    url += '?acc=' + defaultLoc;
   }
 
   xhrRequest(url, 'GET',
