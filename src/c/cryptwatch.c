@@ -90,7 +90,6 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     time_t dayOfUpdate = s_last_update - wt->tm_hour * 3600 + wt->tm_min * 60 + wt->tm_sec;
     weatherstart = (now - dayOfUpdate) / 86400;
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp %d", s_temperature[weatherstart]);
   if (s_temperature[weatherstart] < 15 || s_temperature[weatherstart] > 35) {
     graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 2 + (s_temperature[weatherstart] > 25 ? 2 : 0)]);
     graphics_fill_circle(ctx, s_points[9], 10);
@@ -169,7 +168,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     }
     Tuple *notif_temperature_t = dict_find(iter, MESSAGE_KEY_Temperature + i);
     if (notif_temperature_t) {
-      s_temperature[i] = notif_forecast_t->value->int32;
+      s_temperature[i] = notif_temperature_t->value->int32;
     }
   }
 }
