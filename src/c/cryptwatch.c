@@ -90,7 +90,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     time_t dayOfUpdate = s_last_update - wt->tm_hour * 3600 + wt->tm_min * 60 + wt->tm_sec;
     weatherstart = (now - dayOfUpdate) / 86400;
   }
-  if (s_temperature[weatherstart] < 15 || s_temperature[weatherstart] > 35) {
+  if (s_temperature[weatherstart] != -40 && (s_temperature[weatherstart] < 15 || s_temperature[weatherstart] > 35)) {
     graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 2 + (s_temperature[weatherstart] > 25 ? 2 : 0)]);
     graphics_fill_circle(ctx, s_points[9], 10);
   }
