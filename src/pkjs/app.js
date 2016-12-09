@@ -12,7 +12,9 @@ var xhrRequest = function (url, type, callback) {
 
 function weatherService(pos) {
   var url = 'http://fj3k.com/pebble/';
-  if (pos) url += '?lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude;
+  if (pos && !(pos.coords.latitude == 0 && pos.coords.longitude == 0)) {
+    url += '?lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude;
+  }
 
   xhrRequest(url, 'GET',
     function(responseText) {
@@ -20,8 +22,8 @@ function weatherService(pos) {
 
       var keys = require('message_keys');
       for (var i = 0; i < json.weather.forecast.length; i++) {
-        var tempMax = Math.round(json.weather.forecast[i].max);
-//        var tempMin = Math.round(json.weather.forecast[i].min);
+        var tempMax = parseInt(json.weather.forecast[i].max, 10);
+//        var tempMin = parseInt(json.weather.forecast[i].min, 10);
         var icon = parseInt(json.weather.forecast[i].icon, 10);
   
         var dictionary = {};

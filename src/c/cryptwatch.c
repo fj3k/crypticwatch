@@ -4,10 +4,18 @@
 static Window *s_window;
 static Layer *s_simple_bg_layer, *s_hands_layer;
 static GPoint s_points[19];
+static GColor s_pallette[4];
 
 static int s_forecast[8];
 static int s_temperature[8];
 static time_t s_last_update;
+
+long a_rand() {
+  static long seed = 100;
+  seed = (((seed * 214013L + 2531011L) >> 16) & 32767);
+
+  return (seed % 1000);
+}
 
 static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -18,7 +26,7 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_antialiased(ctx, 1);
   graphics_context_set_stroke_color(ctx, GColorWhite);
   for (int i = 0; i <= 18; i++) {
-    graphics_draw_circle(ctx, s_points[i], 10);
+    graphics_draw_circle(ctx, s_points[i], 9);
   }
 }
 
@@ -30,45 +38,65 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  if (t->tm_hour > 12) {
+  if (t->tm_hour >= 12) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[0], 10);
   }
   if (t->tm_hour % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[1], 10);
   }
   if (t->tm_hour % 12 / 2 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[2], 10);
   }
   if (t->tm_hour % 12 / 4 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[11], 10);
   }
   if (t->tm_hour % 12 / 8 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[12], 10);
   }
   if (t->tm_min % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[7], 10);
   }
   if (t->tm_min / 2 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[8], 10);
   }
   if (t->tm_min / 4 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[5], 10);
   }
   if (t->tm_min / 8 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[6], 10);
   }
   if (t->tm_min / 16 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[3], 10);
   }
   if (t->tm_min / 32 % 2) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[4], 10);
   }
 
-  if (s_temperature[0] < 20 || s_temperature[0] > 30) {
+  int weatherstart = 0;
+  if (s_last_update) {
+    struct tm *wt = localtime(&s_last_update);
+    //Find midnight at the start of the last update day.
+    time_t dayOfUpdate = s_last_update - wt->tm_hour * 3600 + wt->tm_min * 60 + wt->tm_sec;
+    weatherstart = (now - dayOfUpdate) / 86400;
+  }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp %d", s_temperature[weatherstart]);
+  if (s_temperature[weatherstart] < 15 || s_temperature[weatherstart] > 35) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 2 + (s_temperature[weatherstart] > 25 ? 2 : 0)]);
     graphics_fill_circle(ctx, s_points[9], 10);
   }
-  if (s_forecast[0] == WEATHER_RAIN || s_forecast[0] == WEATHER_SHOWERS || s_forecast[0] == WEATHER_STORM || s_forecast[0] == WEATHER_SNOW) {
+  if (s_forecast[weatherstart] == WEATHER_RAIN || s_forecast[weatherstart] == WEATHER_SHOWERS || s_forecast[weatherstart] == WEATHER_STORM || s_forecast[weatherstart] == WEATHER_SNOW) {
+    graphics_context_set_fill_color(ctx, s_pallette[a_rand() % 4]);
     graphics_fill_circle(ctx, s_points[10], 10);
   }
 }
@@ -197,6 +225,17 @@ static void init() {
   app_message_register_inbox_received(inbox_received_handler);
   app_message_open(128, 128);
 
+  if (PBL_IF_COLOR_ELSE(true, false)) {
+    s_pallette[0] = GColorVeryLightBlue;
+    s_pallette[1] = GColorInchworm;
+    s_pallette[2] = GColorSunsetOrange;
+    s_pallette[3] = GColorLavenderIndigo;
+  } else {
+    s_pallette[0] = GColorWhite;
+    s_pallette[1] = GColorWhite;
+    s_pallette[2] = GColorWhite;
+    s_pallette[3] = GColorWhite;
+  }
   Layer *window_layer = window_get_root_layer(s_window);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
